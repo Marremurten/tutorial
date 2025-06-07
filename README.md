@@ -1,3 +1,7 @@
+# Stockholm Places
+
+A tutorial project for sharing favorite places in Stockholm. Users can discover and share restaurants, dog walking spots, forest retreats, and any other special places around the city.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
