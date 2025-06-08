@@ -9,6 +9,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm start` - Start production server
 - `npm run lint` - Run ESLint
 
+## Testing Commands
+
+- `npm test` - Run all unit tests with Jest
+- `npm run test:watch` - Run tests in watch mode for development
+- `npm run test:coverage` - Run tests with coverage report
+
 ## Custom Commands
 
 - `/feature <feature-name>` - Create a PRD for a new feature through guided questions and create a new git branch with the same name
@@ -31,5 +37,31 @@ This is a Next.js 15 project using the App Router with TypeScript and Tailwind C
 - Tailwind CSS v4 
 - ESLint with Next.js config
 - Geist fonts (Sans and Mono variants)
+- Jest + React Testing Library for unit testing
+- MongoDB with Mongoose for data persistence
+- Google Maps Places API for location services
 
 The project uses Turbopack for faster development builds and follows Next.js App Router conventions.
+
+## Testing Framework
+
+The project uses Jest with React Testing Library for comprehensive unit testing:
+
+**Test Configuration:**
+- `jest.config.js` - Jest configuration with Next.js integration
+- `jest.setup.js` - Global test setup and mocks
+- Tests located in `src/components/__tests__/` directories
+
+**Key Components Tested:**
+- GooglePlacesAutocomplete - 20 comprehensive unit tests covering:
+  * Component rendering states and props
+  * Google Maps API loading and initialization
+  * Stockholm bounds validation (lat: 59.17-59.5, lng: 17.8-18.4)
+  * Place selection and error handling
+  * User interactions and cleanup
+
+**Testing Best Practices:**
+- Mock external dependencies (Google Maps API, GoogleMapsLoader)
+- Test component behavior, not implementation details
+- Cover edge cases and error scenarios
+- Ensure proper cleanup and memory management
