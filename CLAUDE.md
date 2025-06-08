@@ -9,6 +9,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm start` - Start production server
 - `npm run lint` - Run ESLint
 
+## Custom Commands
+
+- `/feature <feature-name>` - Create a PRD for a new feature through guided questions and create a new git branch with the same name
+
 ## Architecture
 
 This is a Next.js 15 project using the App Router with TypeScript and Tailwind CSS v4.
