@@ -30,10 +30,10 @@ const locationSchema = new Schema({
 }, { _id: false })
 
 const placeSchema = new Schema<IPlace>({
-  name: { type: String, required: false },
-  description: { type: String, required: false },
-  category: { type: String, required: false },
-  location: { type: locationSchema, required: false },
+  name: { type: String, required: true },
+  description: { type: String, required: true },
+  category: { type: String, required: true },
+  location: { type: locationSchema, required: true },
   images: { type: [String], default: [] },
   submittedBy: { type: String, default: 'Anonymous' },
   createdAt: { type: Schema.Types.Mixed },

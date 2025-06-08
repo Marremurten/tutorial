@@ -62,10 +62,8 @@ class GoogleMapsLoader {
       script.defer = true;
 
       script.onload = () => {
-        console.log('Google Maps script loaded');
         // Verify the API is working
         if (typeof google !== 'undefined' && google.maps && google.maps.places) {
-          console.log('Google Maps Places API is available');
           this.isLoaded = true;
           this.isLoading = false;
           this.executeCallbacks();

@@ -3,6 +3,14 @@
 import { useEffect, useRef, useState } from 'react';
 import GoogleMapsLoader from '@/utils/googleMapsLoader';
 
+// Stockholm bounds for restricting search (moved outside component to avoid re-renders)
+const STOCKHOLM_BOUNDS = {
+  north: 59.5,
+  south: 59.17,
+  east: 18.4,
+  west: 17.8,
+};
+
 interface PlaceDetails {
   address: string;
   coordinates: {
@@ -32,14 +40,6 @@ export default function GooglePlacesAutocomplete({
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Stockholm bounds for restricting search
-  const stockholmBounds = {
-    north: 59.5,
-    south: 59.17,
-    east: 18.4,
-    west: 17.8,
-  };
-
   // Load Google Maps API
   useEffect(() => {
     const loader = GoogleMapsLoader.getInstance();
@@ -62,21 +62,12 @@ export default function GooglePlacesAutocomplete({
   useEffect(() => {
     const initializeAutocomplete = () => {
       if (!isLoaded || !inputRef.current) {
-        console.log(
-          'Cannot initialize - isLoaded:',
-          isLoaded,
-          'inputRef.current:',
-          !!inputRef.current
-        );
         return false;
       }
 
       if (isInitialized) {
-        console.log('Already initialized, skipping');
         return true;
       }
-
-      console.log('Initializing Google Places Autocomplete...');
 
       try {
         // Clean up any existing autocomplete
@@ -95,19 +86,17 @@ export default function GooglePlacesAutocomplete({
           }
         );
 
-        console.log('Autocomplete created successfully');
 
         // Set Stockholm bounds
         const bounds = new google.maps.LatLngBounds(
-          new google.maps.LatLng(stockholmBounds.south, stockholmBounds.west),
-          new google.maps.LatLng(stockholmBounds.north, stockholmBounds.east)
+          new google.maps.LatLng(STOCKHOLM_BOUNDS.south, STOCKHOLM_BOUNDS.west),
+          new google.maps.LatLng(STOCKHOLM_BOUNDS.north, STOCKHOLM_BOUNDS.east)
         );
         autocomplete.setBounds(bounds);
 
         // Add place selection listener
         autocomplete.addListener('place_changed', () => {
           const place = autocomplete.getPlace();
-          console.log('Place selected:', place);
 
           if (!place.geometry || !place.geometry.location) {
             console.warn('No location details available');
@@ -128,25 +117,32 @@ export default function GooglePlacesAutocomplete({
           const lng = placeDetails.coordinates.lng;
 
           if (
-            lat >= stockholmBounds.south &&
-            lat <= stockholmBounds.north &&
-            lng >= stockholmBounds.west &&
-            lng <= stockholmBounds.east
+            lat >= STOCKHOLM_BOUNDS.south &&
+            lat <= STOCKHOLM_BOUNDS.north &&
+            lng >= STOCKHOLM_BOUNDS.west &&
+            lng <= STOCKHOLM_BOUNDS.east
           ) {
             onPlaceSelect(placeDetails);
           } else {
-            alert('Please select a location within Stockholm area');
+            // Show error and clear input for locations outside Stockholm
             if (inputRef.current) {
               inputRef.current.value = '';
+              inputRef.current.placeholder = 'Please select a location within Stockholm area';
+              inputRef.current.style.borderColor = '#ef4444';
+              
+              // Reset placeholder and border after 3 seconds
+              setTimeout(() => {
+                if (inputRef.current) {
+                  inputRef.current.placeholder = placeholder;
+                  inputRef.current.style.borderColor = '';
+                }
+              }, 3000);
             }
           }
         });
 
         autocompleteRef.current = autocomplete;
         setIsInitialized(true);
-        console.log(
-          'Autocomplete initialization complete - isInitialized set to true'
-        );
         return true;
       } catch (error) {
         console.error('Error initializing autocomplete:', error);
@@ -164,7 +160,7 @@ export default function GooglePlacesAutocomplete({
 
       return () => clearTimeout(timer);
     }
-  }, [isLoaded, isInitialized, onPlaceSelect]);
+  }, [isLoaded, isInitialized]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -199,19 +195,8 @@ export default function GooglePlacesAutocomplete({
         autoComplete="off"
         spellCheck="false"
         onFocus={() => {
-          console.log('Input focused - checking autocomplete state');
-          console.log(
-            'isLoaded:',
-            isLoaded,
-            'isInitialized:',
-            isInitialized,
-            'autocompleteRef.current:',
-            !!autocompleteRef.current
-          );
-
           // Force re-initialization if autocomplete seems broken
           if (!autocompleteRef.current && isLoaded) {
-            console.log('Re-initializing autocomplete on focus');
             setIsInitialized(false);
           }
         }}

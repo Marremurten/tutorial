@@ -11,6 +11,7 @@ export interface Place {
       lat: number
       lng: number
     }
+    placeId?: string
   }
   images: string[]
   submittedBy: string
@@ -28,6 +29,7 @@ export interface CreatePlaceData {
       lat: number
       lng: number
     }
+    placeId?: string
   }
   images?: string[]
   submittedBy?: string
