@@ -2,12 +2,20 @@
 
 import { useState } from 'react';
 import { PLACE_CATEGORIES } from '@/types/place';
+import GooglePlacesAutocomplete from './GooglePlacesAutocomplete';
 
 interface FormData {
   name: string;
   description: string;
   category: string;
-  address: string;
+  location: {
+    address: string;
+    coordinates: {
+      lat: number;
+      lng: number;
+    };
+    placeId: string;
+  } | null;
 }
 
 interface AddPlaceFormProps {
@@ -19,15 +27,25 @@ export default function AddPlaceForm({ onSuccess }: AddPlaceFormProps) {
     name: '',
     description: '',
     category: '',
-    address: ''
+    location: null
   });
   
-  const [errors, setErrors] = useState<Partial<FormData>>({});
+  const [errors, setErrors] = useState<{
+    name?: string;
+    description?: string;
+    category?: string;
+    location?: string;
+  }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<FormData> = {};
+    const newErrors: {
+      name?: string;
+      description?: string;
+      category?: string;
+      location?: string;
+    } = {};
 
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
@@ -45,10 +63,8 @@ export default function AddPlaceForm({ onSuccess }: AddPlaceFormProps) {
       newErrors.category = 'Please select a category';
     }
 
-    if (!formData.address.trim()) {
-      newErrors.address = 'Address is required';
-    } else if (formData.address.length > 200) {
-      newErrors.address = 'Address must be less than 200 characters';
+    if (!formData.location) {
+      newErrors.location = 'Please select a location from Stockholm';
     }
 
     setErrors(newErrors);
@@ -74,10 +90,7 @@ export default function AddPlaceForm({ onSuccess }: AddPlaceFormProps) {
           name: formData.name.trim(),
           description: formData.description.trim(),
           category: formData.category,
-          location: {
-            address: formData.address.trim(),
-            coordinates: { lat: 0, lng: 0 }
-          },
+          location: formData.location!,
           images: [],
           submittedBy: 'Anonymous'
         }),
@@ -88,7 +101,7 @@ export default function AddPlaceForm({ onSuccess }: AddPlaceFormProps) {
       }
 
       // Reset form
-      setFormData({ name: '', description: '', category: '', address: '' });
+      setFormData({ name: '', description: '', category: '', location: null });
       setErrors({});
       setShowForm(false);
       onSuccess();
@@ -100,10 +113,17 @@ export default function AddPlaceForm({ onSuccess }: AddPlaceFormProps) {
     }
   };
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
+  const handleInputChange = (field: 'name' | 'description' | 'category', value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  const handlePlaceSelect = (place: { address: string; coordinates: { lat: number; lng: number }; placeId: string }) => {
+    setFormData(prev => ({ ...prev, location: place }));
+    if (errors.location) {
+      setErrors(prev => ({ ...prev, location: undefined }));
     }
   };
 
@@ -182,23 +202,22 @@ export default function AddPlaceForm({ onSuccess }: AddPlaceFormProps) {
           </div>
         </div>
 
-        {/* Address Field */}
+        {/* Location Field with Google Places */}
         <div>
-          <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-            Address *
+          <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
+            Location *
           </label>
-          <input
-            type="text"
-            id="address"
-            value={formData.address}
-            onChange={(e) => handleInputChange('address', e.target.value)}
-            placeholder="e.g., Stadsgårdshamnen 22, 116 45 Stockholm"
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              errors.address ? 'border-red-500' : 'border-gray-300'
-            }`}
-            maxLength={200}
+          <GooglePlacesAutocomplete
+            onPlaceSelect={handlePlaceSelect}
+            placeholder="Search for a Stockholm location..."
+            value={formData.location?.address || ''}
+            error={errors.location}
           />
-          {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
+          {formData.location && (
+            <p className="text-green-600 text-xs mt-1">
+              ✓ Selected: {formData.location.address}
+            </p>
+          )}
         </div>
 
         {/* Description Field */}

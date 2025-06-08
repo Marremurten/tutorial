@@ -10,6 +10,7 @@ export interface IPlace extends Document {
       lat: number
       lng: number
     }
+    placeId?: string
   }
   images: string[]
   submittedBy: string
@@ -24,7 +25,8 @@ const coordinatesSchema = new Schema({
 
 const locationSchema = new Schema({
   address: { type: String, required: true },
-  coordinates: { type: coordinatesSchema, required: true }
+  coordinates: { type: coordinatesSchema, required: true },
+  placeId: { type: String, required: false }
 }, { _id: false })
 
 const placeSchema = new Schema<IPlace>({

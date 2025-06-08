@@ -12,6 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Custom Commands
 
 - `/feature <feature-name>` - Create a PRD for a new feature through guided questions and create a new git branch with the same name
+- `/update-feature <feature-name>` - Update an existing feature PRD by asking what to add/modify and updating the documentation
 
 ## Architecture
 

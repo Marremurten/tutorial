@@ -29,7 +29,7 @@ Users can only view places that were pre-populated in the database. There's no w
    - Name field (required)
    - Description textarea (required)  
    - Category dropdown with predefined options (required)
-   - Location address text input (required)
+   - Google Places Autocomplete for location (required, Stockholm-restricted)
    - Anonymous submission (no user account required)
 
 2. **Form Validation**
@@ -86,6 +86,7 @@ Users can only view places that were pre-populated in the database. There's no w
 - **Styling:** Tailwind CSS v4
 - **Validation:** Client-side form validation
 - **UI Components:** Radix UI components for form elements
+- **Maps Integration:** Google Maps JavaScript API with Places Autocomplete
 
 ### Backend Integration
 - **API Endpoint:** POST `/api/places`
@@ -100,24 +101,35 @@ Users can only view places that were pre-populated in the database. There's no w
   description: string (required, max 500 chars)  
   category: string (required, from predefined list)
   location: {
-    address: string (required, max 200 chars)
-    coordinates: { lat: 0, lng: 0 } // Default values for MVP
+    address: string (from Google Places API)
+    coordinates: { 
+      lat: number, // From Google Places API geometry
+      lng: number  // From Google Places API geometry
+    }
+    placeId: string // Google Places ID for reference
   }
   images: [] // Empty array for MVP
   submittedBy: "Anonymous" // Default value
 }
 ```
 
+### Google Places API Integration
+- **Component:** Places Autocomplete with country restriction to Sweden
+- **Bounds:** Stockholm metropolitan area (lat: 59.17-59.5, lng: 17.8-18.4)
+- **Place Types:** All establishment types allowed
+- **Required Fields:** geometry (coordinates), formatted_address, place_id
+- **API Key:** Requires Google Maps JavaScript API key with Places API enabled
+
 ## 6. Out of Scope (Future Features)
 
 ### Not Included in MVP
 - User authentication/accounts
 - Photo upload functionality
-- Map integration for location selection
+- Interactive map display for location selection
 - Content moderation/approval workflow
-- Location coordinate lookup/geocoding
 - Edit/delete submitted places
 - User profiles or submission history
+- Advanced place search filters
 
 ## 7. Success Metrics
 
@@ -150,24 +162,26 @@ Users can only view places that were pre-populated in the database. There's no w
 
 ### Technical Requirements
 - [ ] Form integrates with existing POST `/api/places` endpoint
-- [ ] Uses existing Place mongoose model
+- [ ] Uses existing Place mongoose model (updated for placeId field)
+- [ ] Google Places Autocomplete restricts results to Stockholm area
+- [ ] Extracts coordinates automatically from selected place
 - [ ] Client-side validation prevents invalid submissions
 - [ ] Server-side validation as backup
-- [ ] Proper error handling for API failures
+- [ ] Proper error handling for API failures and Google API errors
 
 ## 9. Timeline & Implementation
 
-### Phase 1 - Form Creation (Week 1)
-- Create `/add-place` page and route
-- Build form component with Radix UI
-- Implement client-side validation
-- Style with Tailwind CSS
+### Phase 1 - Google Places Integration (Week 1)
+- Set up Google Maps JavaScript API with Places Autocomplete
+- Implement Stockholm area restrictions and bounds
+- Build location input component with autocomplete
+- Extract coordinates and place details from API response
 
-### Phase 2 - Integration (Week 1)  
-- Connect form to existing API endpoint
-- Add success/error handling
-- Implement redirect flow
-- Add navigation button to home page
+### Phase 2 - Form Enhancement (Week 1)  
+- Update existing form to use Google Places component
+- Update Place mongoose model to include placeId field
+- Connect enhanced form to existing API endpoint
+- Add enhanced validation and error handling
 
 ### Phase 3 - Testing & Polish (Week 1)
 - Test form submission end-to-end
@@ -190,6 +204,23 @@ Users can only view places that were pre-populated in the database. There's no w
 
 - **Risk:** Poor quality submissions
 - **Mitigation:** Clear field labels, character limits, examples
+
+## 11. Version History
+
+### Version 2.0 - Google Places API Integration
+**Date:** Current Update  
+**Changes:**
+- **BREAKING:** Replaced manual address text input with Google Places Autocomplete
+- **ENHANCED:** Added automatic coordinate extraction from Google Places API
+- **ADDED:** Place ID field for Google Places reference
+- **RESTRICTED:** Location selection limited to Stockholm metropolitan area
+- **UPDATED:** Technical requirements to include Google Maps JavaScript API
+- **ENHANCED:** Form validation to handle Google API responses
+- **UPDATED:** Timeline to reflect Google Places integration phases
+
+### Version 1.0 - Initial MVP
+**Date:** Original Implementation  
+**Features:** Basic form with manual address input, category selection, and MongoDB storage
 
 ---
 
