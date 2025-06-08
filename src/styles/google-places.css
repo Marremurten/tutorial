@@ -1,0 +1,48 @@
+/* Google Places Autocomplete Dropdown Styling */
+.pac-container {
+  z-index: 9999 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  border: 1px solid #e5e7eb !important;
+  margin-top: 2px !important;
+}
+
+.pac-item {
+  padding: 8px 12px !important;
+  border-bottom: 1px solid #f3f4f6 !important;
+  cursor: pointer !important;
+}
+
+.pac-item:hover {
+  background-color: #f9fafb !important;
+}
+
+.pac-item-selected {
+  background-color: #3b82f6 !important;
+  color: white !important;
+}
+
+.pac-item-query {
+  font-size: 14px !important;
+  color: #1f2937 !important;
+}
+
+.pac-matched {
+  font-weight: 600 !important;
+  color: #3b82f6 !important;
+}
+
+.pac-item-selected .pac-matched {
+  color: white !important;
+}
+
+/* Ensure the dropdown appears above form elements */
+.pac-container:after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 0;
+  z-index: 9999;
+}

@@ -1,0 +1,162 @@
+[
+  {
+    "name": "Fotografiska",
+    "description": "Contemporary photography museum with stunning views over Stockholm. Great café on the top floor with panoramic city views.",
+    "category": "Museum",
+    "location": {
+      "address": "Stadsgårdshamnen 22, 116 45 Stockholm",
+      "coordinates": {
+        "lat": 59.3181,
+        "lng": 18.0844
+      }
+    },
+    "images": [],
+    "submittedBy": "Emma_Local",
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-15T10:00:00Z"
+  },
+  {
+    "name": "Tantolunden Dog Park",
+    "description": "Large off-leash dog park with separate areas for small and large dogs. Beautiful waterfront location with great views.",
+    "category": "Dog Walking",
+    "location": {
+      "address": "Tantolunden, 118 42 Stockholm",
+      "coordinates": {
+        "lat": 59.3156,
+        "lng": 18.0486
+      }
+    },
+    "images": [],
+    "submittedBy": "DogLover_Marcus",
+    "createdAt": "2024-01-16T14:30:00Z",
+    "updatedAt": "2024-01-16T14:30:00Z"
+  },
+  {
+    "name": "Hermans Vegetarian Restaurant",
+    "description": "Amazing vegetarian buffet with incredible views over Stockholm. Perfect for lunch with a view. Try the salad bar!",
+    "category": "Restaurant",
+    "location": {
+      "address": "Fjällgatan 23B, 116 28 Stockholm",
+      "coordinates": {
+        "lat": 59.3186,
+        "lng": 18.0814
+      }
+    },
+    "images": [],
+    "submittedBy": "Foodie_Sarah",
+    "createdAt": "2024-01-17T12:15:00Z",
+    "updatedAt": "2024-01-17T12:15:00Z"
+  },
+  {
+    "name": "Nacka Nature Reserve",
+    "description": "Beautiful forest area perfect for hiking and nature walks. Multiple trails of varying difficulty. Great for escaping the city.",
+    "category": "Forest",
+    "location": {
+      "address": "Nacka Naturreservat, 131 52 Nacka",
+      "coordinates": {
+        "lat": 59.3089,
+        "lng": 18.1647
+      }
+    },
+    "images": [],
+    "submittedBy": "Hiker_Lars",
+    "createdAt": "2024-01-18T09:45:00Z",
+    "updatedAt": "2024-01-18T09:45:00Z"
+  },
+  {
+    "name": "Djurgården",
+    "description": "Large island park perfect for walking, cycling, and picnics. Home to many museums and the beautiful Rosendal Garden.",
+    "category": "Park",
+    "location": {
+      "address": "Djurgården, 115 21 Stockholm",
+      "coordinates": {
+        "lat": 59.3247,
+        "lng": 18.0944
+      }
+    },
+    "images": [],
+    "submittedBy": "Nature_Anna",
+    "createdAt": "2024-01-19T16:20:00Z",
+    "updatedAt": "2024-01-19T16:20:00Z"
+  },
+  {
+    "name": "Drop Coffee Roasters",
+    "description": "Excellent specialty coffee roaster in Södermalm. Perfect for coffee lovers who appreciate quality beans and expert brewing.",
+    "category": "Cafe",
+    "location": {
+      "address": "Wollmar Yxkullsgatan 10, 118 50 Stockholm",
+      "coordinates": {
+        "lat": 59.3147,
+        "lng": 18.0683
+      }
+    },
+    "images": [],
+    "submittedBy": "Coffee_Erik",
+    "createdAt": "2024-01-20T08:30:00Z",
+    "updatedAt": "2024-01-20T08:30:00Z"
+  },
+  {
+    "name": "Monteliusvägen Viewpoint",
+    "description": "Famous walking path with stunning panoramic views over Lake Mälaren and Stockholm's skyline. Best at sunset!",
+    "category": "Viewpoint",
+    "location": {
+      "address": "Monteliusvägen, 117 41 Stockholm",
+      "coordinates": {
+        "lat": 59.3198,
+        "lng": 18.0747
+      }
+    },
+    "images": [],
+    "submittedBy": "Photographer_Lisa",
+    "createdAt": "2024-01-21T19:00:00Z",
+    "updatedAt": "2024-01-21T19:00:00Z"
+  },
+  {
+    "name": "Långholmen Beach",
+    "description": "Small sandy beach in the city center. Perfect for summer swimming and sunbathing. Very popular with locals.",
+    "category": "Beach",
+    "location": {
+      "address": "Långholmen, 117 33 Stockholm",
+      "coordinates": {
+        "lat": 59.3186,
+        "lng": 18.0511
+      }
+    },
+    "images": [],
+    "submittedBy": "Summer_Lover",
+    "createdAt": "2024-01-22T15:45:00Z",
+    "updatedAt": "2024-01-22T15:45:00Z"
+  },
+  {
+    "name": "Södermalm Shopping District",
+    "description": "Trendy shopping area with unique boutiques, vintage stores, and local design shops. Great for finding Swedish design pieces.",
+    "category": "Shopping",
+    "location": {
+      "address": "Götgatan, 116 46 Stockholm",
+      "coordinates": {
+        "lat": 59.3147,
+        "lng": 18.0717
+      }
+    },
+    "images": [],
+    "submittedBy": "Shopper_Maja",
+    "createdAt": "2024-01-23T13:15:00Z",
+    "updatedAt": "2024-01-23T13:15:00Z"
+  },
+  {
+    "name": "Rålambshovsparken",
+    "description": "Popular park for dog walking with open fields and waterfront access. Great for both dogs and their owners to socialize.",
+    "category": "Dog Walking",
+    "location": {
+      "address": "Rålambshovsparken, 112 20 Stockholm",
+      "coordinates": {
+        "lat": 59.3328,
+        "lng": 18.0367
+      }
+    },
+    "images": [],
+    "submittedBy": "Dog_Walker_Per",
+    "createdAt": "2024-01-24T11:00:00Z",
+    "updatedAt": "2024-01-24T11:00:00Z"
+  }
+]
