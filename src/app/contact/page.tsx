@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function ContactPage() {
   return (
     <div className="container mx-auto px-4 py-8">
@@ -5,7 +7,7 @@ export default function ContactPage() {
       
       <div className="max-w-2xl">
         <p className="text-lg text-gray-700 mb-8">
-          We'd love to hear from you! Get in touch with questions, suggestions, or just to say hello.
+          We&apos;d love to hear from you! Get in touch with questions, suggestions, or just to say hello.
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -27,9 +29,9 @@ export default function ContactPage() {
                 <h3 className="font-medium text-gray-900">Submit a Place</h3>
                 <p className="text-gray-600">
                   Know a great spot in Stockholm? 
-                  <a href="/" className="text-blue-600 hover:text-blue-800 ml-1">
+                  <Link href="/" className="text-blue-600 hover:text-blue-800 ml-1">
                     Add it to our map
-                  </a>
+                  </Link>
                 </p>
               </div>
             </div>

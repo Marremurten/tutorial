@@ -1,6 +1,7 @@
 import * as AspectRatio from '@radix-ui/react-aspect-ratio';
 import { IPlace } from '@/models/Place';
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface PlaceCardProps {
   place: IPlace;
@@ -36,10 +37,11 @@ export default function PlaceCard({ place, onDelete }: PlaceCardProps) {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200">
       <AspectRatio.Root ratio={16 / 9}>
-        <img
+        <Image
           src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=225&fit=crop&auto=format"
           alt={place.name}
-          className="w-full h-full object-cover"
+          fill
+          className="object-cover"
         />
       </AspectRatio.Root>
 

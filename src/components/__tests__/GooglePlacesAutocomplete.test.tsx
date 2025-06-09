@@ -29,14 +29,14 @@ const mockLatLng = jest.fn((lat: number, lng: number) => ({
   lng: () => lng,
 }))
 
-const mockLatLngBounds = jest.fn((sw: any, ne: any) => ({
+const mockLatLngBounds = jest.fn((sw: google.maps.LatLng, ne: google.maps.LatLng) => ({
   getSouthWest: () => sw,
   getNorthEast: () => ne,
 }))
 
 // Setup global Google Maps API mock
 beforeAll(() => {
-  (global as any).google = {
+  (global as typeof globalThis & { google: typeof google }).google = {
     maps: {
       places: {
         Autocomplete: jest.fn(() => mockAutocomplete),

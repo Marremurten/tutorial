@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import GoogleMapsLoader from '@/utils/googleMapsLoader';
 
 // Stockholm bounds for restricting search (moved outside component to avoid re-renders)
@@ -39,6 +39,51 @@ export default function GooglePlacesAutocomplete({
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // Memoize the place selection handler
+  const handlePlaceSelect = useCallback(() => {
+    const place = autocompleteRef.current?.getPlace();
+    if (!place || !place.geometry || !place.geometry.location) {
+      return;
+    }
+
+    const lat = place.geometry.location.lat();
+    const lng = place.geometry.location.lng();
+
+    // Validate Stockholm bounds
+    if (
+      lat >= STOCKHOLM_BOUNDS.south &&
+      lat <= STOCKHOLM_BOUNDS.north &&
+      lng >= STOCKHOLM_BOUNDS.west &&
+      lng <= STOCKHOLM_BOUNDS.east
+    ) {
+      const placeDetails: PlaceDetails = {
+        address: place.formatted_address || '',
+        coordinates: {
+          lat,
+          lng,
+        },
+        placeId: place.place_id || '',
+      };
+      
+      onPlaceSelect(placeDetails);
+    } else {
+      // Show error and clear input for locations outside Stockholm
+      if (inputRef.current) {
+        inputRef.current.value = '';
+        inputRef.current.placeholder = 'Please select a location within Stockholm area';
+        inputRef.current.style.borderColor = '#ef4444';
+        
+        // Reset placeholder and border after 3 seconds
+        setTimeout(() => {
+          if (inputRef.current) {
+            inputRef.current.placeholder = placeholder;
+            inputRef.current.style.borderColor = '';
+          }
+        }, 3000);
+      }
+    }
+  }, [onPlaceSelect, placeholder]);
 
   // Load Google Maps API
   useEffect(() => {
@@ -95,51 +140,7 @@ export default function GooglePlacesAutocomplete({
         autocomplete.setBounds(bounds);
 
         // Add place selection listener
-        autocomplete.addListener('place_changed', () => {
-          const place = autocomplete.getPlace();
-
-          if (!place.geometry || !place.geometry.location) {
-            console.warn('No location details available');
-            return;
-          }
-
-          const placeDetails: PlaceDetails = {
-            address: place.formatted_address || '',
-            coordinates: {
-              lat: place.geometry.location.lat(),
-              lng: place.geometry.location.lng(),
-            },
-            placeId: place.place_id || '',
-          };
-
-          // Check Stockholm bounds
-          const lat = placeDetails.coordinates.lat;
-          const lng = placeDetails.coordinates.lng;
-
-          if (
-            lat >= STOCKHOLM_BOUNDS.south &&
-            lat <= STOCKHOLM_BOUNDS.north &&
-            lng >= STOCKHOLM_BOUNDS.west &&
-            lng <= STOCKHOLM_BOUNDS.east
-          ) {
-            onPlaceSelect(placeDetails);
-          } else {
-            // Show error and clear input for locations outside Stockholm
-            if (inputRef.current) {
-              inputRef.current.value = '';
-              inputRef.current.placeholder = 'Please select a location within Stockholm area';
-              inputRef.current.style.borderColor = '#ef4444';
-              
-              // Reset placeholder and border after 3 seconds
-              setTimeout(() => {
-                if (inputRef.current) {
-                  inputRef.current.placeholder = placeholder;
-                  inputRef.current.style.borderColor = '';
-                }
-              }, 3000);
-            }
-          }
-        });
+        autocomplete.addListener('place_changed', handlePlaceSelect);
 
         autocompleteRef.current = autocomplete;
         setIsInitialized(true);
@@ -160,7 +161,7 @@ export default function GooglePlacesAutocomplete({
 
       return () => clearTimeout(timer);
     }
-  }, [isLoaded, isInitialized]);
+  }, [isLoaded, isInitialized, handlePlaceSelect]);
 
   // Cleanup on unmount
   useEffect(() => {

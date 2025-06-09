@@ -11,10 +11,10 @@ interface MongooseConnection {
   promise: Promise<typeof mongoose> | null
 }
 
-let cached: MongooseConnection = (global as any).mongoose
+let cached: MongooseConnection = (global as typeof globalThis & { mongoose?: MongooseConnection }).mongoose || { conn: null, promise: null }
 
 if (!cached) {
-  cached = (global as any).mongoose = { conn: null, promise: null }
+  cached = (global as typeof globalThis & { mongoose?: MongooseConnection }).mongoose = { conn: null, promise: null }
 }
 
 async function connectMongoDB(): Promise<typeof mongoose> {

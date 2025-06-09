@@ -5,12 +5,12 @@ export default function AboutPage() {
       
       <div className="prose max-w-none">
         <p className="text-lg text-gray-700 mb-4">
-          Welcome to Stockholm Places - your guide to discovering the best spots in Sweden's beautiful capital city.
+          Welcome to Stockholm Places - your guide to discovering the best spots in Sweden&apos;s beautiful capital city.
         </p>
         
         <p className="text-gray-600 mb-4">
           Our platform helps locals and visitors share and discover amazing places throughout Stockholm. 
-          From cozy cafés in Gamla Stan to scenic viewpoints across the archipelago, we're building 
+          From cozy cafés in Gamla Stan to scenic viewpoints across the archipelago, we&apos;re building 
           a community-driven guide to the city we love.
         </p>
         
