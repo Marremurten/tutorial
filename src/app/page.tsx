@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import PlaceCard from '@/components/PlaceCard';
 import AddPlaceForm from '@/components/AddPlaceForm';
 import { IPlace } from '@/models/Place';
@@ -34,6 +35,13 @@ export default function Home() {
     setSuccessMessage('Your place has been added successfully!');
     fetchPlaces(); // Refresh the places list
     setTimeout(() => setSuccessMessage(null), 5000); // Clear message after 5 seconds
+  };
+
+  const handlePlaceDeleted = (placeId: string) => {
+    // Remove the place from the local state immediately for better UX
+    setPlaces(places.filter(place => place._id?.toString() !== placeId));
+    setSuccessMessage('Place deleted successfully!');
+    setTimeout(() => setSuccessMessage(null), 5000);
   };
 
   if (loading) {
@@ -70,9 +78,20 @@ export default function Home() {
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
             Stockholm Places
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-gray-600 mb-4">
             Discover amazing places shared by locals and visitors
           </p>
+          <div className="flex justify-center space-x-4">
+            <Link
+              href="/map"
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m-6 3l6-3" />
+              </svg>
+              View Map
+            </Link>
+          </div>
         </div>
 
         {/* Success Message */}
@@ -93,7 +112,11 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {places.map((place) => (
-              <PlaceCard key={place._id?.toString()} place={place} />
+              <PlaceCard 
+                key={place._id?.toString()} 
+                place={place} 
+                onDelete={handlePlaceDeleted}
+              />
             ))}
           </div>
         )}

@@ -27,3 +27,32 @@ export async function GET(
     )
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await connectMongoDB()
+    
+    const deletedPlace = await Place.findByIdAndDelete(params.id)
+    
+    if (!deletedPlace) {
+      return NextResponse.json(
+        { error: 'Place not found' },
+        { status: 404 }
+      )
+    }
+    
+    return NextResponse.json(
+      { message: 'Place deleted successfully', place: deletedPlace },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error('Error deleting place:', error)
+    return NextResponse.json(
+      { error: 'Failed to delete place' },
+      { status: 500 }
+    )
+  }
+}
