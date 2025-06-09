@@ -1,13 +1,19 @@
-import React from 'react'
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
-import GooglePlacesAutocomplete from '../GooglePlacesAutocomplete'
+import React from 'react';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from '@testing-library/react';
+import GooglePlacesAutocomplete from '../GooglePlacesAutocomplete';
 
 // Create a manual mock for GoogleMapsLoader
 const mockGoogleMapsLoader = {
   getInstance: jest.fn(),
   isApiLoaded: jest.fn(),
   load: jest.fn(),
-}
+};
 
 // Mock the GoogleMapsLoader module
 jest.mock('../../utils/googleMapsLoader', () => ({
@@ -15,28 +21,31 @@ jest.mock('../../utils/googleMapsLoader', () => ({
   default: {
     getInstance: () => mockGoogleMapsLoader,
   },
-}))
+}));
 
 // Mock Google Maps API
 const mockAutocomplete = {
   addListener: jest.fn(),
   setBounds: jest.fn(),
   getPlace: jest.fn(),
-}
+};
 
 const mockLatLng = jest.fn((lat: number, lng: number) => ({
   lat: () => lat,
   lng: () => lng,
-}))
+}));
 
-const mockLatLngBounds = jest.fn((sw: google.maps.LatLng, ne: google.maps.LatLng) => ({
-  getSouthWest: () => sw,
-  getNorthEast: () => ne,
-}))
+const mockLatLngBounds = jest.fn(
+  (sw: google.maps.LatLng, ne: google.maps.LatLng) => ({
+    getSouthWest: () => sw,
+    getNorthEast: () => ne,
+  })
+);
 
 // Setup global Google Maps API mock
 beforeAll(() => {
-  (global as typeof globalThis & { google: typeof google }).google = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (global as any).google = {
     maps: {
       places: {
         Autocomplete: jest.fn(() => mockAutocomplete),
@@ -48,168 +57,173 @@ beforeAll(() => {
       LatLng: mockLatLng,
       LatLngBounds: mockLatLngBounds,
     },
-  }
-})
+  };
+});
 
 describe('GooglePlacesAutocomplete', () => {
-  const mockOnPlaceSelect = jest.fn()
+  const mockOnPlaceSelect = jest.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks()
-    
+    jest.clearAllMocks();
+
     // Reset mock implementations
-    mockGoogleMapsLoader.getInstance.mockReturnValue(mockGoogleMapsLoader)
-    mockGoogleMapsLoader.isApiLoaded.mockReturnValue(false)
-    mockGoogleMapsLoader.load.mockResolvedValue(undefined)
-    
+    mockGoogleMapsLoader.getInstance.mockReturnValue(mockGoogleMapsLoader);
+    mockGoogleMapsLoader.isApiLoaded.mockReturnValue(false);
+    mockGoogleMapsLoader.load.mockResolvedValue(undefined);
+
     // Reset Google Maps mocks
-    mockAutocomplete.addListener.mockClear()
-    mockAutocomplete.setBounds.mockClear()
-    mockAutocomplete.getPlace.mockClear()
-  })
+    mockAutocomplete.addListener.mockClear();
+    mockAutocomplete.setBounds.mockClear();
+    mockAutocomplete.getPlace.mockClear();
+  });
 
   describe('Component Rendering', () => {
     it('renders loading state when Google Maps API is not loaded', () => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(false)
-      
-      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />)
-      
-      const input = screen.getByRole('textbox')
-      expect(input).toHaveAttribute('placeholder', 'Loading Google Places...')
-      expect(input).toBeDisabled()
-    })
+      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(false);
+
+      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />);
+
+      const input = screen.getByRole('textbox');
+      expect(input).toHaveAttribute('placeholder', 'Loading Google Places...');
+      expect(input).toBeDisabled();
+    });
 
     it('renders active input when Google Maps API is loaded', async () => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-      
-      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />)
-      
+      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true);
+
+      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />);
+
       await waitFor(() => {
-        const input = screen.getByRole('textbox')
-        expect(input).not.toBeDisabled()
-        expect(input).toHaveAttribute('placeholder', 'Search for Stockholm addresses...')
-      })
-    })
+        const input = screen.getByRole('textbox');
+        expect(input).not.toBeDisabled();
+        expect(input).toHaveAttribute(
+          'placeholder',
+          'Search for Stockholm addresses...'
+        );
+      });
+    });
 
     it('renders custom placeholder when provided', async () => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-      const customPlaceholder = 'Find a place in Stockholm'
-      
+      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true);
+      const customPlaceholder = 'Find a place in Stockholm';
+
       render(
-        <GooglePlacesAutocomplete 
+        <GooglePlacesAutocomplete
           onPlaceSelect={mockOnPlaceSelect}
           placeholder={customPlaceholder}
         />
-      )
-      
+      );
+
       await waitFor(() => {
-        const input = screen.getByRole('textbox')
-        expect(input).toHaveAttribute('placeholder', customPlaceholder)
-      })
-    })
+        const input = screen.getByRole('textbox');
+        expect(input).toHaveAttribute('placeholder', customPlaceholder);
+      });
+    });
 
     it('applies custom className when provided', async () => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-      const customClassName = 'my-custom-class'
-      
+      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true);
+      const customClassName = 'my-custom-class';
+
       const { container } = render(
-        <GooglePlacesAutocomplete 
+        <GooglePlacesAutocomplete
           onPlaceSelect={mockOnPlaceSelect}
           className={customClassName}
         />
-      )
-      
+      );
+
       await waitFor(() => {
-        const wrapper = container.firstChild
-        expect(wrapper).toHaveClass(customClassName)
-      })
-    })
+        const wrapper = container.firstChild;
+        expect(wrapper).toHaveClass(customClassName);
+      });
+    });
 
     it('displays error message when error prop is provided', async () => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-      const errorMessage = 'Location is required'
-      
+      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true);
+      const errorMessage = 'Location is required';
+
       render(
-        <GooglePlacesAutocomplete 
+        <GooglePlacesAutocomplete
           onPlaceSelect={mockOnPlaceSelect}
           error={errorMessage}
         />
-      )
-      
-      expect(screen.getByText(errorMessage)).toBeInTheDocument()
-    })
+      );
+
+      expect(screen.getByText(errorMessage)).toBeInTheDocument();
+    });
 
     it('applies error styling when error is present', async () => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-      const errorMessage = 'Location is required'
-      
+      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true);
+      const errorMessage = 'Location is required';
+
       render(
-        <GooglePlacesAutocomplete 
+        <GooglePlacesAutocomplete
           onPlaceSelect={mockOnPlaceSelect}
           error={errorMessage}
         />
-      )
-      
+      );
+
       await waitFor(() => {
-        const input = screen.getByRole('textbox')
-        expect(input).toHaveClass('border-red-500')
-      })
-    })
+        const input = screen.getByRole('textbox');
+        expect(input).toHaveClass('border-red-500');
+      });
+    });
 
     it('sets default value when provided', async () => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-      const defaultValue = 'Gamla Stan, Stockholm'
-      
+      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true);
+      const defaultValue = 'Gamla Stan, Stockholm';
+
       render(
-        <GooglePlacesAutocomplete 
+        <GooglePlacesAutocomplete
           onPlaceSelect={mockOnPlaceSelect}
           value={defaultValue}
         />
-      )
-      
+      );
+
       await waitFor(() => {
-        const input = screen.getByDisplayValue(defaultValue)
-        expect(input).toBeInTheDocument()
-      })
-    })
-  })
+        const input = screen.getByDisplayValue(defaultValue);
+        expect(input).toBeInTheDocument();
+      });
+    });
+  });
 
   describe('Google Maps API Loading', () => {
     it('calls GoogleMapsLoader.load() when API is not loaded', () => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(false)
-      
-      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />)
-      
-      expect(mockGoogleMapsLoader.load).toHaveBeenCalled()
-    })
+      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(false);
+
+      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />);
+
+      expect(mockGoogleMapsLoader.load).toHaveBeenCalled();
+    });
 
     it('does not call GoogleMapsLoader.load() when API is already loaded', () => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-      
-      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />)
-      
-      expect(mockGoogleMapsLoader.load).not.toHaveBeenCalled()
-    })
+      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true);
+
+      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />);
+
+      expect(mockGoogleMapsLoader.load).not.toHaveBeenCalled();
+    });
 
     it('handles API loading errors gracefully', async () => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(false)
-      mockGoogleMapsLoader.load.mockRejectedValue(new Error('Failed to load API'))
-      
-      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />)
-      
+      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(false);
+      mockGoogleMapsLoader.load.mockRejectedValue(
+        new Error('Failed to load API')
+      );
+
+      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />);
+
       // Should not crash and should show loading state
-      expect(screen.getByRole('textbox')).toBeDisabled()
-    })
-  })
+      expect(screen.getByRole('textbox')).toBeDisabled();
+    });
+  });
 
   describe('Autocomplete Initialization', () => {
     beforeEach(() => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-    })
+      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true);
+    });
 
     it('initializes Google Places Autocomplete when API is loaded', async () => {
-      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />)
-      
+      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />);
+
       await waitFor(() => {
         expect(global.google.maps.places.Autocomplete).toHaveBeenCalledWith(
           expect.any(HTMLElement),
@@ -218,13 +232,13 @@ describe('GooglePlacesAutocomplete', () => {
             fields: ['place_id', 'formatted_address', 'geometry', 'name'],
             types: ['establishment', 'geocode'],
           }
-        )
-      })
-    })
+        );
+      });
+    });
 
     it('sets Stockholm bounds on autocomplete instance', async () => {
-      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />)
-      
+      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />);
+
       await waitFor(() => {
         expect(mockLatLngBounds).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -235,27 +249,27 @@ describe('GooglePlacesAutocomplete', () => {
             lat: expect.any(Function),
             lng: expect.any(Function),
           })
-        )
-        expect(mockAutocomplete.setBounds).toHaveBeenCalled()
-      })
-    })
+        );
+        expect(mockAutocomplete.setBounds).toHaveBeenCalled();
+      });
+    });
 
     it('adds place_changed listener to autocomplete', async () => {
-      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />)
-      
+      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />);
+
       await waitFor(() => {
         expect(mockAutocomplete.addListener).toHaveBeenCalledWith(
           'place_changed',
           expect.any(Function)
-        )
-      })
-    })
-  })
+        );
+      });
+    });
+  });
 
   describe('Stockholm Bounds Validation', () => {
     beforeEach(() => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-    })
+      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true);
+    });
 
     it('accepts valid Stockholm locations', async () => {
       const validPlace = {
@@ -267,33 +281,33 @@ describe('GooglePlacesAutocomplete', () => {
             lng: () => 18.07, // Within Stockholm bounds
           },
         },
-      }
+      };
 
-      mockAutocomplete.getPlace.mockReturnValue(validPlace)
-      
-      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />)
-      
+      mockAutocomplete.getPlace.mockReturnValue(validPlace);
+
+      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />);
+
       await waitFor(() => {
-        expect(mockAutocomplete.addListener).toHaveBeenCalled()
-      })
+        expect(mockAutocomplete.addListener).toHaveBeenCalled();
+      });
 
       // Get the place_changed callback and trigger it
       const placeChangedCallback = mockAutocomplete.addListener.mock.calls.find(
-        call => call[0] === 'place_changed'
-      )?.[1]
+        (call) => call[0] === 'place_changed'
+      )?.[1];
 
-      expect(placeChangedCallback).toBeDefined()
-      
+      expect(placeChangedCallback).toBeDefined();
+
       act(() => {
-        placeChangedCallback()
-      })
+        placeChangedCallback();
+      });
 
       expect(mockOnPlaceSelect).toHaveBeenCalledWith({
         address: 'Gamla Stan, Stockholm, Sweden',
         coordinates: { lat: 59.32, lng: 18.07 },
         placeId: 'test-place-id',
-      })
-    })
+      });
+    });
 
     it('rejects locations outside Stockholm bounds', async () => {
       const invalidPlace = {
@@ -305,72 +319,75 @@ describe('GooglePlacesAutocomplete', () => {
             lng: () => 12.56, // Outside Stockholm bounds
           },
         },
-      }
+      };
 
-      mockAutocomplete.getPlace.mockReturnValue(invalidPlace)
-      
-      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />)
-      
+      mockAutocomplete.getPlace.mockReturnValue(invalidPlace);
+
+      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />);
+
       await waitFor(() => {
-        expect(mockAutocomplete.addListener).toHaveBeenCalled()
-      })
+        expect(mockAutocomplete.addListener).toHaveBeenCalled();
+      });
 
       // Get the place_changed callback and trigger it
       const placeChangedCallback = mockAutocomplete.addListener.mock.calls.find(
-        call => call[0] === 'place_changed'
-      )?.[1]
+        (call) => call[0] === 'place_changed'
+      )?.[1];
 
       act(() => {
-        placeChangedCallback()
-      })
+        placeChangedCallback();
+      });
 
       // Should not call onPlaceSelect for invalid locations
-      expect(mockOnPlaceSelect).not.toHaveBeenCalled()
+      expect(mockOnPlaceSelect).not.toHaveBeenCalled();
 
       // Should show error feedback in the input
       await waitFor(() => {
-        const input = screen.getByRole('textbox')
-        expect(input).toHaveAttribute('placeholder', 'Please select a location within Stockholm area')
-      })
-    })
+        const input = screen.getByRole('textbox');
+        expect(input).toHaveAttribute(
+          'placeholder',
+          'Please select a location within Stockholm area'
+        );
+      });
+    });
 
     it('handles places without geometry gracefully', async () => {
       const placeWithoutGeometry = {
         formatted_address: 'Test Address',
         place_id: 'test-place-id',
         geometry: null,
-      }
+      };
 
-      mockAutocomplete.getPlace.mockReturnValue(placeWithoutGeometry)
-      
-      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />)
-      
+      mockAutocomplete.getPlace.mockReturnValue(placeWithoutGeometry);
+
+      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />);
+
       await waitFor(() => {
-        expect(mockAutocomplete.addListener).toHaveBeenCalled()
-      })
+        expect(mockAutocomplete.addListener).toHaveBeenCalled();
+      });
 
       const placeChangedCallback = mockAutocomplete.addListener.mock.calls.find(
-        call => call[0] === 'place_changed'
-      )?.[1]
+        (call) => call[0] === 'place_changed'
+      )?.[1];
 
       act(() => {
-        placeChangedCallback()
-      })
+        placeChangedCallback();
+      });
 
       // Should not call onPlaceSelect
-      expect(mockOnPlaceSelect).not.toHaveBeenCalled()
-    })
-  })
+      expect(mockOnPlaceSelect).not.toHaveBeenCalled();
+    });
+  });
 
   describe('Error Recovery', () => {
     beforeEach(() => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-      jest.useFakeTimers()
-    })
+      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true);
+      jest.useFakeTimers();
+    });
 
     afterEach(() => {
-      jest.useRealTimers()
-    })
+      jest.useRealTimers();
+    });
 
     it('resets error styling after timeout', async () => {
       const invalidPlace = {
@@ -382,95 +399,102 @@ describe('GooglePlacesAutocomplete', () => {
             lng: () => 12.56,
           },
         },
-      }
+      };
 
-      mockAutocomplete.getPlace.mockReturnValue(invalidPlace)
-      
+      mockAutocomplete.getPlace.mockReturnValue(invalidPlace);
+
       render(
-        <GooglePlacesAutocomplete 
+        <GooglePlacesAutocomplete
           onPlaceSelect={mockOnPlaceSelect}
           placeholder="Original placeholder"
         />
-      )
-      
+      );
+
       await waitFor(() => {
-        expect(mockAutocomplete.addListener).toHaveBeenCalled()
-      })
+        expect(mockAutocomplete.addListener).toHaveBeenCalled();
+      });
 
       const placeChangedCallback = mockAutocomplete.addListener.mock.calls.find(
-        call => call[0] === 'place_changed'
-      )?.[1]
+        (call) => call[0] === 'place_changed'
+      )?.[1];
 
       act(() => {
-        placeChangedCallback()
-      })
+        placeChangedCallback();
+      });
 
-      const input = screen.getByRole('textbox')
-      
+      const input = screen.getByRole('textbox');
+
       // Check error state
       await waitFor(() => {
-        expect(input).toHaveAttribute('placeholder', 'Please select a location within Stockholm area')
-      })
+        expect(input).toHaveAttribute(
+          'placeholder',
+          'Please select a location within Stockholm area'
+        );
+      });
 
       // Fast-forward timer
       act(() => {
-        jest.advanceTimersByTime(3000)
-      })
+        jest.advanceTimersByTime(3000);
+      });
 
       // Check that error state is reset
       await waitFor(() => {
-        expect(input).toHaveAttribute('placeholder', 'Original placeholder')
-      })
-    })
-  })
+        expect(input).toHaveAttribute('placeholder', 'Original placeholder');
+      });
+    });
+  });
 
   describe('Cleanup', () => {
     beforeEach(() => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-    })
+      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true);
+    });
 
     it('cleans up event listeners on unmount', async () => {
-      const { unmount } = render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />)
-      
+      const { unmount } = render(
+        <GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />
+      );
+
       await waitFor(() => {
-        expect(global.google.maps.places.Autocomplete).toHaveBeenCalled()
-      })
+        expect(global.google.maps.places.Autocomplete).toHaveBeenCalled();
+      });
 
-      unmount()
+      unmount();
 
-      expect(global.google.maps.event.clearInstanceListeners).toHaveBeenCalled()
-    })
-  })
+      expect(
+        global.google.maps.event.clearInstanceListeners
+      ).toHaveBeenCalled();
+    });
+  });
 
   describe('Input Interactions', () => {
     beforeEach(() => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-    })
+      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true);
+    });
 
     it('handles input focus correctly', async () => {
-      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />)
-      
-      await waitFor(() => {
-        const input = screen.getByRole('textbox')
-        expect(input).toBeInTheDocument()
-      })
+      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />);
 
-      const input = screen.getByRole('textbox')
-      fireEvent.focus(input)
+      await waitFor(() => {
+        const input = screen.getByRole('textbox');
+        expect(input).toBeInTheDocument();
+      });
+
+      const input = screen.getByRole('textbox');
+      fireEvent.focus(input);
 
       // Check that focus event was handled (doesn't crash)
-      expect(input).toBeInTheDocument()
-    })
+      expect(input).toBeInTheDocument();
+    });
 
     it('has correct input attributes', async () => {
-      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />)
-      
+      render(<GooglePlacesAutocomplete onPlaceSelect={mockOnPlaceSelect} />);
+
       await waitFor(() => {
-        const input = screen.getByRole('textbox')
-        expect(input).toHaveAttribute('autoComplete', 'off')
-        expect(input).toHaveAttribute('spellCheck', 'false')
-        expect(input).toHaveAttribute('type', 'text')
-      })
-    })
-  })
-})
+        const input = screen.getByRole('textbox');
+        expect(input).toHaveAttribute('autoComplete', 'off');
+        expect(input).toHaveAttribute('spellCheck', 'false');
+        expect(input).toHaveAttribute('type', 'text');
+      });
+    });
+  });
+});
