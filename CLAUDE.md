@@ -17,8 +17,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Custom Commands
 
-- `/feature <feature-name>` - Create a PRD for a new feature through guided questions and create a new git branch with the same name
-- `/update-feature <feature-name>` - Update an existing feature PRD by asking what to add/modify and updating the documentation
+- `/feature <feature-name>` - Create a PRD for a new feature through guided questions (one question at a time), create a new git branch with the same name, and ask if you want to set up a unit test for the feature
+- `/update-feature <feature-name>` - Update an existing feature PRD by asking what to add/modify and updating the documentation. If there is a test connected to this feature, update the test if needed
 
 ## Architecture
 
@@ -65,3 +65,42 @@ The project uses Jest with React Testing Library for comprehensive unit testing:
 - Test component behavior, not implementation details
 - Cover edge cases and error scenarios
 - Ensure proper cleanup and memory management
+
+## Library Integration Guidelines
+
+⚠️ **MANDATORY: Always Use Context7 for New Libraries** ⚠️
+
+Before installing, configuring, or using ANY new library or framework:
+
+**REQUIRED WORKFLOW:**
+1. **MUST** use `mcp__context7__resolve-library-id` to find the correct library
+2. **MUST** use `mcp__context7__get-library-docs` to get current documentation  
+3. **MUST** follow the Context7 documentation patterns exactly
+4. **NEVER** rely on general knowledge or outdated information
+
+**This is MANDATORY - not optional. Context7 prevents:**
+- Using deprecated packages or methods
+- Following outdated installation instructions
+- Breaking changes from version mismatches
+- Wasted debugging time from old tutorials
+
+**Example Commands I Must Use:**
+```
+// STEP 1: Always resolve library ID first
+mcp__context7__resolve-library-id "library-name"
+
+// STEP 2: Get current documentation  
+mcp__context7__get-library-docs "/org/project" 
+topic: "installation and basic usage"
+```
+
+**Enforcement Rules:**
+- If I suggest installing a library WITHOUT using Context7 first, STOP ME
+- If I provide code examples without Context7 docs, REMIND ME to check Context7
+- If I reference general knowledge about a library, REQUIRE Context7 verification
+
+**Why This is Critical:**
+- Libraries change rapidly with breaking changes
+- General knowledge becomes outdated quickly
+- Context7 provides real, tested, current documentation
+- Saves hours of debugging from deprecated methods

@@ -1,72 +1,33 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import PlacesMap from '../PlacesMap'
 
 // Mock fetch for API calls
 global.fetch = jest.fn()
 
-// Create a manual mock for GoogleMapsLoader
-const mockGoogleMapsLoader = {
-  getInstance: jest.fn(),
-  isApiLoaded: jest.fn(),
-  load: jest.fn(),
-}
-
-// Mock the GoogleMapsLoader module
-jest.mock('../../utils/googleMapsLoader', () => ({
-  __esModule: true,
-  default: {
-    getInstance: () => mockGoogleMapsLoader,
-  },
-}))
-
-// Mock Google Maps API
+// Mock @vis.gl/react-google-maps
 const mockMap = {
-  setCenter: jest.fn(),
-  setZoom: jest.fn(),
-  getBounds: jest.fn(),
   fitBounds: jest.fn(),
+  getZoom: jest.fn(),
+  setZoom: jest.fn(),
 }
 
-const mockMarker = {
-  setMap: jest.fn(),
-  setPosition: jest.fn(),
-  addListener: jest.fn(),
-  getPosition: jest.fn(),
-}
+const mockUseMap = jest.fn()
 
-const mockInfoWindow = {
-  setContent: jest.fn(),
-  open: jest.fn(),
-  close: jest.fn(),
-}
-
-const mockLatLng = jest.fn((lat: number, lng: number) => ({
-  lat: () => lat,
-  lng: () => lng,
+jest.mock('@vis.gl/react-google-maps', () => ({
+  APIProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="api-provider">{children}</div>,
+  Map: ({ children }: { children: React.ReactNode }) => <div data-testid="google-map">{children}</div>,
+  AdvancedMarker: ({ position, title, onClick }: { position: { lat: number; lng: number }; title: string; onClick: () => void }) => (
+    <button 
+      data-testid={`marker-${title}`} 
+      onClick={onClick}
+      data-position={JSON.stringify(position)}
+    >
+      {title}
+    </button>
+  ),
+  useMap: () => mockUseMap(),
 }))
-
-const mockLatLngBounds = jest.fn(() => ({
-  extend: jest.fn(),
-  isEmpty: jest.fn(() => false),
-}))
-
-// Setup global Google Maps API mock
-beforeAll(() => {
-  (global as any).google = {
-    maps: {
-      Map: jest.fn(() => mockMap),
-      Marker: jest.fn(() => mockMarker),
-      InfoWindow: jest.fn(() => mockInfoWindow),
-      LatLng: mockLatLng,
-      LatLngBounds: mockLatLngBounds,
-      event: {
-        addListener: jest.fn(),
-        clearInstanceListeners: jest.fn(),
-      },
-    },
-  }
-})
 
 // Mock places data
 const mockPlaces = [
@@ -74,69 +35,99 @@ const mockPlaces = [
     _id: '1',
     name: 'Gamla Stan',
     description: 'Historic old town',
-    address: 'Gamla Stan, Stockholm',
     category: 'Tourist Attraction',
-    coordinates: { lat: 59.3251, lng: 18.0711 },
+    location: {
+      address: 'Gamla Stan, Stockholm',
+      coordinates: { lat: 59.3251, lng: 18.0711 },
+    },
+    images: [],
+    submittedBy: 'Test User',
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01'),
   },
   {
     _id: '2',
     name: 'Vasa Museum',
     description: 'Maritime museum',
-    address: 'Galärvarvsvägen 14, Stockholm',
     category: 'Museum',
-    coordinates: { lat: 59.3280, lng: 18.0916 },
+    location: {
+      address: 'Galärvarvsvägen 14, Stockholm',
+      coordinates: { lat: 59.3280, lng: 18.0916 },
+    },
+    images: [],
+    submittedBy: 'Test User',
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01'),
   },
   {
     _id: '3',
     name: 'Fotografiska',
     description: 'Photography museum',
-    address: 'Stadsgårdshamnen 22, Stockholm',
     category: 'Museum',
-    coordinates: { lat: 59.3186, lng: 18.0845 },
+    location: {
+      address: 'Stadsgårdshamnen 22, Stockholm',
+      coordinates: { lat: 59.3186, lng: 18.0845 },
+    },
+    images: [],
+    submittedBy: 'Test User',
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01'),
   },
 ]
 
 const mockCategories = ['Tourist Attraction', 'Museum', 'Restaurant']
 
 describe('PlacesMap', () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-    
-    // Reset mock implementations
-    mockGoogleMapsLoader.getInstance.mockReturnValue(mockGoogleMapsLoader)
-    mockGoogleMapsLoader.isApiLoaded.mockReturnValue(false)
-    mockGoogleMapsLoader.load.mockResolvedValue(undefined)
-    
-    // Mock successful API calls
+  const setupDefaultMocks = () => {
     ;(global.fetch as jest.Mock)
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => mockPlaces,
+        json: async () => ({ places: mockPlaces }),
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => mockCategories,
+        json: async () => ({ categories: mockCategories }),
       })
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks()
     
-    // Reset Google Maps mocks
-    mockMap.setCenter.mockClear()
-    mockMap.setZoom.mockClear()
-    mockMarker.setMap.mockClear()
-    mockMarker.addListener.mockClear()
+    // Set up environment variable
+    process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY = 'test-api-key'
+    
+    // Mock useMap hook
+    mockUseMap.mockReturnValue(mockMap)
+
+    // Mock Google Maps global
+    global.google = {
+      maps: {
+        LatLngBounds: jest.fn(() => ({
+          extend: jest.fn(),
+          isEmpty: jest.fn(() => false),
+        })),
+        event: {
+          addListenerOnce: jest.fn(),
+          removeListener: jest.fn(),
+        },
+      },
+    } as unknown as typeof global.google
+  })
+
+  afterEach(() => {
+    delete process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
   })
 
   describe('Component Rendering', () => {
-    it('renders loading state when Google Maps API is not loaded', () => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(false)
-      
+    it('renders loading state initially', async () => {
+      setupDefaultMocks()
       render(<PlacesMap />)
       
       expect(screen.getByText('Loading map...')).toBeInTheDocument()
     })
 
-    it('renders map container when Google Maps API is loaded', async () => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-      
+    it('renders map container when data is loaded', async () => {
+      setupDefaultMocks()
       render(<PlacesMap />)
       
       await waitFor(() => {
@@ -145,20 +136,31 @@ describe('PlacesMap', () => {
     })
 
     it('renders category filter checkboxes', async () => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-      
+      setupDefaultMocks()
       render(<PlacesMap />)
       
       await waitFor(() => {
-        expect(screen.getByLabelText('Tourist Attraction')).toBeInTheDocument()
-        expect(screen.getByLabelText('Museum')).toBeInTheDocument()
-        expect(screen.getByLabelText('Restaurant')).toBeInTheDocument()
+        expect(screen.getByLabelText('Tourist Attraction (1)')).toBeInTheDocument()
+        expect(screen.getByLabelText('Museum (2)')).toBeInTheDocument()
+        expect(screen.getByLabelText('Restaurant (0)')).toBeInTheDocument()
       })
     })
 
+    it('displays error message when API key is missing', () => {
+      delete process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+      
+      render(<PlacesMap />)
+      
+      expect(screen.getByText('Google Maps API key not configured')).toBeInTheDocument()
+    })
+
     it('displays error message when places API call fails', async () => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-      ;(global.fetch as jest.Mock).mockRejectedValueOnce(new Error('API Error'))
+      ;(global.fetch as jest.Mock)
+        .mockRejectedValueOnce(new Error('API Error'))
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ categories: mockCategories }),
+        })
       
       render(<PlacesMap />)
       
@@ -168,49 +170,9 @@ describe('PlacesMap', () => {
     })
   })
 
-  describe('Map Initialization', () => {
-    beforeEach(() => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-    })
-
-    it('initializes Google Map with Stockholm center and correct zoom', async () => {
-      render(<PlacesMap />)
-      
-      await waitFor(() => {
-        expect(global.google.maps.Map).toHaveBeenCalledWith(
-          expect.any(HTMLElement),
-          expect.objectContaining({
-            center: { lat: 59.3293, lng: 18.0686 }, // Stockholm center
-            zoom: 11, // Greater Stockholm area zoom
-            mapTypeId: 'roadmap',
-          })
-        )
-      })
-    })
-
-    it('loads Google Maps API when not already loaded', () => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(false)
-      
-      render(<PlacesMap />)
-      
-      expect(mockGoogleMapsLoader.load).toHaveBeenCalled()
-    })
-
-    it('does not load API when already loaded', () => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-      
-      render(<PlacesMap />)
-      
-      expect(mockGoogleMapsLoader.load).not.toHaveBeenCalled()
-    })
-  })
-
-  describe('Places and Markers', () => {
-    beforeEach(() => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-    })
-
+  describe('API Integration', () => {
     it('fetches places from API on mount', async () => {
+      setupDefaultMocks()
       render(<PlacesMap />)
       
       await waitFor(() => {
@@ -218,74 +180,90 @@ describe('PlacesMap', () => {
       })
     })
 
-    it('creates markers for all places', async () => {
+    it('fetches categories from API on mount', async () => {
+      setupDefaultMocks()
       render(<PlacesMap />)
       
       await waitFor(() => {
-        expect(global.google.maps.Marker).toHaveBeenCalledTimes(mockPlaces.length)
-      })
-      
-      // Check each place has a marker
-      mockPlaces.forEach((place, index) => {
-        expect(global.google.maps.Marker).toHaveBeenNthCalledWith(index + 1, {
-          position: { lat: place.coordinates.lat, lng: place.coordinates.lng },
-          map: mockMap,
-          title: place.name,
-          clickable: true,
-        })
+        expect(global.fetch).toHaveBeenCalledWith('/api/categories')
       })
     })
 
-    it('adds click listeners to markers', async () => {
+    it('handles API response format correctly', async () => {
+      setupDefaultMocks()
       render(<PlacesMap />)
       
       await waitFor(() => {
-        expect(mockMarker.addListener).toHaveBeenCalledWith('click', expect.any(Function))
-      })
+        expect(screen.getByTestId('marker-Gamla Stan')).toBeInTheDocument()
+      }, { timeout: 3000 })
+    })
+  })
+
+  describe('Map and Markers', () => {
+    it('renders APIProvider and Map components', async () => {
+      setupDefaultMocks()
+      render(<PlacesMap />)
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('api-provider')).toBeInTheDocument()
+        expect(screen.getByTestId('google-map')).toBeInTheDocument()
+      }, { timeout: 3000 })
+    })
+
+    it('creates markers for all places', async () => {
+      setupDefaultMocks()
+      render(<PlacesMap />)
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('marker-Gamla Stan')).toBeInTheDocument()
+        expect(screen.getByTestId('marker-Vasa Museum')).toBeInTheDocument()
+        expect(screen.getByTestId('marker-Fotografiska')).toBeInTheDocument()
+      }, { timeout: 3000 })
     })
 
     it('fits map bounds to show all markers', async () => {
+      setupDefaultMocks()
       render(<PlacesMap />)
       
       await waitFor(() => {
         expect(mockMap.fitBounds).toHaveBeenCalled()
-      })
+      }, { timeout: 3000 })
     })
   })
 
   describe('Category Filtering', () => {
-    beforeEach(() => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-    })
-
     it('filters markers when category is unchecked', async () => {
+      setupDefaultMocks()
       render(<PlacesMap />)
       
       await waitFor(() => {
-        expect(screen.getByLabelText('Museum')).toBeInTheDocument()
-      })
+        expect(screen.getByLabelText('Museum (2)')).toBeInTheDocument()
+      }, { timeout: 3000 })
       
-      const museumCheckbox = screen.getByLabelText('Museum')
+      const museumCheckbox = screen.getByLabelText('Museum (2)')
       
       // Uncheck museum category
       fireEvent.click(museumCheckbox)
       
       await waitFor(() => {
         expect(museumCheckbox).not.toBeChecked()
-      })
-      
-      // Museum markers should be hidden (setMap(null) called)
-      expect(mockMarker.setMap).toHaveBeenCalledWith(null)
+        // Museum markers should be hidden
+        expect(screen.queryByTestId('marker-Vasa Museum')).not.toBeInTheDocument()
+        expect(screen.queryByTestId('marker-Fotografiska')).not.toBeInTheDocument()
+        // Tourist attraction should still be visible
+        expect(screen.getByTestId('marker-Gamla Stan')).toBeInTheDocument()
+      }, { timeout: 3000 })
     })
 
     it('shows markers when category is checked', async () => {
+      setupDefaultMocks()
       render(<PlacesMap />)
       
       await waitFor(() => {
-        expect(screen.getByLabelText('Museum')).toBeInTheDocument()
-      })
+        expect(screen.getByLabelText('Museum (2)')).toBeInTheDocument()
+      }, { timeout: 3000 })
       
-      const museumCheckbox = screen.getByLabelText('Museum')
+      const museumCheckbox = screen.getByLabelText('Museum (2)')
       
       // Uncheck then recheck museum category
       fireEvent.click(museumCheckbox)
@@ -293,108 +271,97 @@ describe('PlacesMap', () => {
       
       await waitFor(() => {
         expect(museumCheckbox).toBeChecked()
-      })
-      
-      // Museum markers should be shown again
-      expect(mockMarker.setMap).toHaveBeenCalledWith(mockMap)
+        expect(screen.getByTestId('marker-Vasa Museum')).toBeInTheDocument()
+        expect(screen.getByTestId('marker-Fotografiska')).toBeInTheDocument()
+      }, { timeout: 3000 })
     })
 
     it('allows multiple categories to be selected', async () => {
+      setupDefaultMocks()
       render(<PlacesMap />)
       
       await waitFor(() => {
-        expect(screen.getByLabelText('Museum')).toBeInTheDocument()
-        expect(screen.getByLabelText('Tourist Attraction')).toBeInTheDocument()
-      })
+        expect(screen.getByLabelText('Museum (2)')).toBeInTheDocument()
+        expect(screen.getByLabelText('Tourist Attraction (1)')).toBeInTheDocument()
+      }, { timeout: 3000 })
       
-      const museumCheckbox = screen.getByLabelText('Museum')
-      const touristCheckbox = screen.getByLabelText('Tourist Attraction')
+      const museumCheckbox = screen.getByLabelText('Museum (2)')
+      const touristCheckbox = screen.getByLabelText('Tourist Attraction (1)')
       
       expect(museumCheckbox).toBeChecked()
       expect(touristCheckbox).toBeChecked()
       
-      // Both should remain checked
+      // Uncheck museum but keep tourist attraction
       fireEvent.click(museumCheckbox)
       expect(museumCheckbox).not.toBeChecked()
       expect(touristCheckbox).toBeChecked()
     })
 
     it('updates filter counts correctly', async () => {
+      setupDefaultMocks()
       render(<PlacesMap />)
       
       await waitFor(() => {
         expect(screen.getByText('Museum (2)')).toBeInTheDocument()
         expect(screen.getByText('Tourist Attraction (1)')).toBeInTheDocument()
-      })
+        expect(screen.getByText('Restaurant (0)')).toBeInTheDocument()
+      }, { timeout: 3000 })
     })
   })
 
   describe('Sidebar Functionality', () => {
-    beforeEach(() => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-    })
-
     it('opens sidebar when marker is clicked', async () => {
+      setupDefaultMocks()
       render(<PlacesMap />)
       
       await waitFor(() => {
-        expect(mockMarker.addListener).toHaveBeenCalled()
-      })
+        expect(screen.getByTestId('marker-Gamla Stan')).toBeInTheDocument()
+      }, { timeout: 3000 })
       
-      // Get the click callback and trigger it
-      const clickCallback = mockMarker.addListener.mock.calls.find(
-        call => call[0] === 'click'
-      )?.[1]
-      
-      expect(clickCallback).toBeDefined()
-      
-      act(() => {
-        clickCallback()
-      })
+      const marker = screen.getByTestId('marker-Gamla Stan')
+      fireEvent.click(marker)
       
       await waitFor(() => {
         expect(screen.getByTestId('place-sidebar')).toBeInTheDocument()
-      })
+      }, { timeout: 3000 })
     })
 
     it('displays place details in sidebar', async () => {
+      setupDefaultMocks()
       render(<PlacesMap />)
       
       await waitFor(() => {
-        expect(mockMarker.addListener).toHaveBeenCalled()
-      })
+        expect(screen.getByTestId('marker-Gamla Stan')).toBeInTheDocument()
+      }, { timeout: 3000 })
       
-      // Simulate clicking on first place marker
-      const clickCallback = mockMarker.addListener.mock.calls[0][1]
-      
-      act(() => {
-        clickCallback()
-      })
+      // Click on Gamla Stan marker
+      const marker = screen.getByTestId('marker-Gamla Stan')
+      fireEvent.click(marker)
       
       await waitFor(() => {
-        expect(screen.getByText('Gamla Stan')).toBeInTheDocument()
+        // Check for sidebar-specific elements instead of duplicated text
+        expect(screen.getByTestId('place-sidebar')).toBeInTheDocument()
         expect(screen.getByText('Historic old town')).toBeInTheDocument()
         expect(screen.getByText('Gamla Stan, Stockholm')).toBeInTheDocument()
         expect(screen.getByText('Tourist Attraction')).toBeInTheDocument()
-      })
+      }, { timeout: 3000 })
     })
 
     it('closes sidebar when close button is clicked', async () => {
+      setupDefaultMocks()
       render(<PlacesMap />)
       
       await waitFor(() => {
-        expect(mockMarker.addListener).toHaveBeenCalled()
-      })
+        expect(screen.getByTestId('marker-Gamla Stan')).toBeInTheDocument()
+      }, { timeout: 3000 })
       
       // Open sidebar
-      const clickCallback = mockMarker.addListener.mock.calls[0][1]
-      act(() => {
-        clickCallback()
-      })
+      const marker = screen.getByTestId('marker-Gamla Stan')
+      fireEvent.click(marker)
       
       await waitFor(() => {
         expect(screen.getByTestId('place-sidebar')).toBeInTheDocument()
-      })
+      }, { timeout: 3000 })
       
       // Close sidebar
       const closeButton = screen.getByLabelText('Close sidebar')
@@ -402,107 +369,100 @@ describe('PlacesMap', () => {
       
       await waitFor(() => {
         expect(screen.queryByTestId('place-sidebar')).not.toBeInTheDocument()
-      })
-    })
-
-    it('handles missing place data gracefully', async () => {
-      render(<PlacesMap />)
-      
-      await waitFor(() => {
-        expect(mockMarker.addListener).toHaveBeenCalled()
-      })
-      
-      // Simulate clicking with invalid place data
-      const clickCallback = mockMarker.addListener.mock.calls[0][1]
-      
-      act(() => {
-        clickCallback() // No place data passed
-      })
-      
-      // Should not crash and should not show sidebar
-      expect(screen.queryByTestId('place-sidebar')).not.toBeInTheDocument()
+      }, { timeout: 3000 })
     })
   })
 
-  describe('Responsive Design', () => {
-    beforeEach(() => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-    })
+  describe('Fallback Coordinates', () => {
+    it('generates fallback coordinates for places missing lat/lng', async () => {
+      const placeWithoutCoordinates = {
+        _id: '4',
+        name: 'Place Without Coords',
+        description: 'A place missing coordinates',
+        category: 'Other',
+        location: {
+          address: 'Unknown, Stockholm',
+          coordinates: { lat: null, lng: null },
+        },
+        images: [],
+        submittedBy: 'Test User',
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+      }
 
-    it('applies responsive classes to map container', async () => {
+      jest.clearAllMocks()
+      ;(global.fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ places: [placeWithoutCoordinates] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ categories: ['Other'] }),
+        })
+
       render(<PlacesMap />)
       
       await waitFor(() => {
-        const mapContainer = screen.getByTestId('map-container')
-        expect(mapContainer).toHaveClass('w-full', 'h-full')
-      })
-    })
-
-    it('applies responsive classes to sidebar', async () => {
-      render(<PlacesMap />)
-      
-      await waitFor(() => {
-        expect(mockMarker.addListener).toHaveBeenCalled()
-      })
-      
-      // Open sidebar
-      const clickCallback = mockMarker.addListener.mock.calls[0][1]
-      act(() => {
-        clickCallback()
-      })
-      
-      await waitFor(() => {
-        const sidebar = screen.getByTestId('place-sidebar')
-        expect(sidebar).toHaveClass('fixed', 'right-0', 'top-0', 'h-full')
-      })
+        const marker = screen.getByTestId('marker-Place Without Coords')
+        expect(marker).toBeInTheDocument()
+        
+        // Check that fallback coordinates were generated (should be near Stockholm center)
+        const position = JSON.parse(marker.getAttribute('data-position') || '{}')
+        expect(position.lat).toBeCloseTo(59.3293, 1)
+        expect(position.lng).toBeCloseTo(18.0686, 1)
+      }, { timeout: 3000 })
     })
   })
 
   describe('Error Handling', () => {
-    it('handles Google Maps API loading errors', async () => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(false)
-      mockGoogleMapsLoader.load.mockRejectedValue(new Error('Failed to load API'))
-      
-      render(<PlacesMap />)
-      
-      await waitFor(() => {
-        expect(screen.getByText('Error loading map. Please refresh the page.')).toBeInTheDocument()
-      })
-    })
-
     it('handles categories API error gracefully', async () => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
+      jest.clearAllMocks()
       ;(global.fetch as jest.Mock)
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => mockPlaces,
+          json: async () => ({ places: mockPlaces }),
         })
         .mockRejectedValueOnce(new Error('Categories API Error'))
       
       render(<PlacesMap />)
       
-      // Should still render map without category filters
+      // Should still render map with fallback categories
       await waitFor(() => {
         expect(screen.getByTestId('map-container')).toBeInTheDocument()
-      })
+        // Should fallback to predefined categories
+        expect(screen.getByText('Restaurant (0)')).toBeInTheDocument()
+      }, { timeout: 3000 })
     })
   })
 
-  describe('Cleanup', () => {
-    beforeEach(() => {
-      mockGoogleMapsLoader.isApiLoaded.mockReturnValue(true)
-    })
-
-    it('cleans up map and markers on unmount', async () => {
-      const { unmount } = render(<PlacesMap />)
+  describe('Responsive Design', () => {
+    it('applies responsive classes to map container', async () => {
+      setupDefaultMocks()
+      render(<PlacesMap />)
       
       await waitFor(() => {
-        expect(global.google.maps.Map).toHaveBeenCalled()
-      })
+        const mapContainer = screen.getByTestId('map-container')
+        expect(mapContainer).toHaveClass('w-full', 'h-full', 'min-h-[500px]')
+      }, { timeout: 3000 })
+    })
 
-      unmount()
-
-      expect(global.google.maps.event.clearInstanceListeners).toHaveBeenCalled()
+    it('applies responsive classes to sidebar', async () => {
+      setupDefaultMocks()
+      render(<PlacesMap />)
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('marker-Gamla Stan')).toBeInTheDocument()
+      }, { timeout: 3000 })
+      
+      // Open sidebar
+      const marker = screen.getByTestId('marker-Gamla Stan')
+      fireEvent.click(marker)
+      
+      await waitFor(() => {
+        const sidebar = screen.getByTestId('place-sidebar')
+        expect(sidebar).toHaveClass('fixed', 'right-0', 'top-0', 'h-full', 'w-96')
+      }, { timeout: 3000 })
     })
   })
 })

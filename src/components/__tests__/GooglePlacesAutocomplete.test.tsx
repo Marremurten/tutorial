@@ -168,8 +168,8 @@ describe('GooglePlacesAutocomplete', () => {
       )
       
       await waitFor(() => {
-        const input = screen.getByRole('textbox')
-        expect(input).toHaveValue(defaultValue)
+        const input = screen.getByDisplayValue(defaultValue)
+        expect(input).toBeInTheDocument()
       })
     })
   })
